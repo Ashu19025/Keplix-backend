@@ -35,13 +35,13 @@ model User {
   services  Service[]   @relation("VendorServices")
   inventory Inventory[]
   promotions Promotion[]
+  Availability  Availability[]
 
   // Chat & Notifications
   sentMessages  Message[]
   notifications Notification[]
   feedbacks     Feedback[]
   documents     Document[]
-  Availability  Availability[]
 
   // Device Info
   fcmToken    String? // Firebase Cloud Messaging Token
@@ -65,24 +65,48 @@ model VendorProfile {
   userId Int  @unique
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Business Details
   business_name String
-  phone         String
-  email         String?
-  address       String? @default("")
+  business_type String? // e.g., "Individual", "Company"
+  description   String?
+
+  // Contact Info
+  phone           String
+  alternate_phone String?
+  email           String?
+  
+  // Owner Details
+  owner_name    String?
+  date_of_birth String? // YYYY-MM-DD
+
+  // Address Structure
+  address   String? @default("") // Full formatted address
+  street    String?
+  area      String?
+  city      String?
+  state     String?
+  pincode   String?
+  landmark  String?
 
   // Location
   latitude  Float?
   longitude Float?
 
-  // Details
-  gst_number      String?
+  // Tax & Legal
+  gst_number String?
+  has_gst    Boolean @default(false)
+  tax_type   String?
+
+  // Timings (JSON stored as String in SQLite)
   operating_hours String? // e.g. "09:00 AM - 09:00 PM"
+  breaks          String? // JSON string: ["13:00-14:00"]
+  holidays        String? // JSON string: ["Sunday"]
 
   // Status
-  status               String  @default("pending") // "pending", "approved", "rejected"
+  status               String  @default("pending")
   onboarding_completed Boolean @default(false)
 
-  image String? // URL to image
+  image String?
 }
 
 model Document {
@@ -107,9 +131,10 @@ model Service {
   name        String
   description String
   price       Decimal
-  duration    Int // in minutes
+  duration    Int
   category    String
-  image_url   String? // The field we aliased to 'image' in the serializer
+  image_url   String?
+  is_active   Boolean @default(true)
 
   bookings Booking[]
 }
@@ -129,7 +154,6 @@ model Booking {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
   payment      Payment?
   review       Review?
   conversation Conversation?
@@ -215,7 +239,9 @@ model Review {
   updatedAt DateTime @updatedAt
 }
 
-
+// ==============================
+// 4. PROMOTIONS, NOTIFICATIONS, FEEDBACK
+// ==============================
 
 model Promotion {
   id          Int      @id @default(autoincrement())
